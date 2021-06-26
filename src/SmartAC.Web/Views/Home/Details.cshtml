@@ -1,0 +1,172 @@
+﻿@model DetailsModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+@{
+    string IsDisabled(SensorFilter filter)
+    {
+        if (Model.Filter == filter)
+        {
+            return "disabled";
+        }
+        return "";
+    }
+}
+
+@if (Model.Device != null)
+{
+    <div>
+        <div class="row">
+            <div class="col">
+                <h4>Device</h4>
+            </div>
+            <div>
+                <div class="btn-group" role="group" aria-label="Basic example">
+                    <a href="@Url.Action("details", new { filter = "today" })" class="btn btn-light" @IsDisabled(SensorFilter.Today)>Today</a>
+                    <a href="@Url.Action("details", new { filter = "thisweek" })" class="btn btn-light" @IsDisabled(SensorFilter.ThisWeek)>ThisWeek</a>
+                    <a href="@Url.Action("details", new { filter = "thismonth" })" class="btn btn-light" @IsDisabled(SensorFilter.ThisMonth)>ThisMonth</a>
+                    <a href="@Url.Action("details", new { filter = "thisyear" })" class="btn btn-light" @IsDisabled(SensorFilter.ThisYear)>ThisYear</a>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Device.SerialNumber)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Device.SerialNumber)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Device.FirmwareVersion)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Device.FirmwareVersion)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Device.RegistrationDate)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Device.RegistrationDate)
+            </dd>
+        </dl>
+    </div>
+    @if (Model.SensorReadings != null && Model.SensorReadings.Any())
+    {
+        <div class="row">
+            <div class="col">
+                <canvas id="myChart" width="1200" height="500"></canvas>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col" style="padding-top:30px;">
+                <h4>Data</h4>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Temperature</th>
+                            <th>Air Humidity</th>
+                            <th>Carbon Monoxide</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.SensorReadings)
+                        {
+                            <tr>
+                                <td>@item.Temperature&#176;C</td>
+                                <td>@item.AirHumidity%rh</td>
+                                <td>@item.CarbonMonoxide PPM</td>
+                                <td>@item.TimeStamp.ToString("MMM d - h:mm:ss tt")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center" style="padding:30px;">
+            <h1 class="display-4" style="font-size:2em">No Sensor Readings Available</h1>
+        </div>
+    }
+}
+else
+{
+    <div class="text-center">
+        <h1 class="display-4">Invalid Device Id</h1>
+    </div>
+}
+<div>
+    <a class="btn btn-danger" asp-action="Index"><i class="fa fa-arrow-left"></i>Back to Home</a>
+</div>
+
+@section Scripts {
+    <script type="application/json" id="model">@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model))</script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+    <script src="https://www.chartjs.org/samples/latest/utils.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script type="text/javascript">
+        var model = JSON.parse(document.getElementById("model").textContent);
+        console.log(model)
+        var labels = model.SensorReadings.map(r => moment(new Date(Date.parse(r.TimeStamp))).format("MMM D - h:mm:ss a"))
+
+
+        var config = {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Temperature',
+                        data: model.SensorReadings.map(r => r.Temperature),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)'
+                        ],
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Air Humidity',
+                        data: model.SensorReadings.map(r => r.AirHumidity),
+                        backgroundColor: [
+                            'rgba(255, 159, 64, 0.2)'
+                        ],
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Carbon Monoxide',
+                        data: model.SensorReadings.map(r => r.CarbonMonoxide),
+                        backgroundColor: [
+                            'rgba(255, 206, 86, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+            },
+            options: {
+                responsive: false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        }
+
+        var chartCanvas = document.getElementById('myChart');
+        if (chartCanvas) {
+            var ctx = chartCanvas.getContext('2d');
+            var myChart = new Chart(ctx, config);
+        }
+
+
+    </script>
+}

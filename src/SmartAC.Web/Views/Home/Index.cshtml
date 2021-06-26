@@ -1,0 +1,41 @@
+﻿@model Device[]
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+
+@if (Model != null && Model.Any())
+{
+    <h2>Devices</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Serial Number</th>
+                <th>Firmware Version</th>
+                <th>Registration Date</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var device in Model)
+            {
+                <tr>
+                    <td>@device.SerialNumber</td>
+                    <td>@device.FirmwareVersion</td>
+                    <td>@device.RegistrationDate</td>
+                    <td class="text-right"><a asp-action="details" asp-route-id="@device.DeviceId" class="btn btn-sm btn-primary"><i class="fa fa-info"></i>View</a></td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="text-center">
+        <h1 class="display-4">No Devices</h1>
+        <p>No Devices have been Registered use the <a href="/swagger">API</a> to register Devices</p>
+    </div>
+}

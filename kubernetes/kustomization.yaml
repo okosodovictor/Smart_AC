@@ -1,0 +1,15 @@
+
+namespace: smartac
+
+resources:
+  - "database/statefulset.yaml"
+  - "database/service.yaml"
+  - "web/deployment.yaml"
+  - "web/service.yaml"
+  - "ingress.yaml"
+
+secretGenerator:
+  - name: postgres
+    literals:
+      - "password=hour-dark-division-remember"
+      - "connstring='Host=postgres;Database=smartac;Username=postgres;Password=hour-dark-division-remember'"

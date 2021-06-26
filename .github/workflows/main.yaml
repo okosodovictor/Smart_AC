@@ -1,0 +1,61 @@
+# This workflow will build a docker containers, publish them to Google Container Registry, and update the deployment configuration.
+#
+# To configure this workflow:
+#
+# 1. Set up secrets in your workspace: GKE_PROJECT with the name of the project, GKE_EMAIL with the service account email, GKE_KEY (base64 endoded) with the service account key.
+#
+# 2. Set the the values in the env section.
+
+name: Main Pipeline
+
+on:
+  push:
+    branches:
+    - main
+
+env:
+  GIT_SHA: ${{ github.sha }}
+  GIT_REF: ${{ github.ref }}
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  IMAGE: odytrice/smartac-web
+
+jobs:
+  pipeline:
+    name: Build and Deploy
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@main
+
+    - name: Run Unit Tests
+      run: |
+        dotnet tool restore
+        dotnet test
+
+    - name: Build and Push Docker Image
+      run: |
+        docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+        docker build \
+          --no-cache \
+          --file Dockerfile \
+          --tag $IMAGE:latest \
+          --tag $IMAGE:${GIT_SHA::8} .
+        docker push $IMAGE
+
+    - uses: Azure/k8s-set-context@v1
+      with:
+        kubeconfig: ${{ secrets.KUBECONFIG }}
+
+    - name: Configure kustomize
+      run: |
+        cd ./kubernetes
+        curl -o kustomize --location https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
+        chmod u+x ./kustomize
+
+    - name: Deploy
+      run: |
+        cd ./kubernetes
+        ./kustomize edit set image $IMAGE:${GIT_SHA::8}
+        kubectl apply -k .

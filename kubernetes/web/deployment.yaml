@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: odytrice/smartac-web:v1
+        env:
+          - name: ConnectionStrings__DataContext
+            valueFrom:
+              secretKeyRef:
+                name: postgres
+                key: connstring
+        resources:
+          limits:
+            memory: "100Mi"
+            cpu: "50m"
+        ports:
+        - containerPort: 80

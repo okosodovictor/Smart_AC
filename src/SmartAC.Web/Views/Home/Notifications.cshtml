@@ -1,0 +1,38 @@
+﻿@model IEnumerable<SmartAC.Domain.Models.Notification>
+
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div ng-app="NotificationApp" ng-cloak>
+    
+    <div ng-controller="NotificationsCtrl as model">
+        <h4 ng-show="model.getPending().length">Pending</h4>
+        <div>
+            <div class="alert alert-primary" ng-repeat="notification in model.getPending()" role="alert">
+                <a ng-href="/home/details/{{notification.subjectId}}">
+                    {{notification.text}} - {{notification.timeStamp | date: 'MMM dd, yyyy @@ h:mma'}}
+                </a>
+                <button type="button" ng-click="model.dismiss(notification)" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </div>
+        <h4 ng-show="model.getDismissed().length">Dismissed</h4>
+        <div>
+            <div class="alert alert-dark" ng-repeat="notification in model.getDismissed()" role="alert">
+                <a ng-href="/home/details/{{notification.subjectId}}" class="text-black-50">
+                    {{notification.text}} - {{notification.timeStamp | date: 'MMM dd, yyyy @@ h:mma'}}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.2/angular.min.js"
+            integrity="sha512-7oYXeK0OxTFxndh0erL8FsjGvrl2VMDor6fVqzlLGfwOQQqTbYsGPv4ZZ15QHfSk80doyaM0ZJdvkyDcVO7KFA=="
+            crossorigin="anonymous"></script>
+    <script src="~/js/notifications.js"></script>
+}
+
